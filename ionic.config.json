@@ -1,0 +1,8 @@
+{
+  "name": "vetcompany",
+  "integrations": {
+    "cordova": {}
+  },
+  "type": "angular",
+  "id": "61db0f60"
+}
