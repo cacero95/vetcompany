@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 import { LoginGuard } from './celador/login.guard';
+import { EntrarRastreoGuard } from './celador/entrar-rastreo.guard';
 
 const routes: Routes = [
   { path: '', loadChildren: './pages/enterate/enterate.module#EnteratePageModule' },
@@ -12,6 +13,9 @@ const routes: Routes = [
   { path: 'enterate', loadChildren: './pages/enterate/enterate.module#EnteratePageModule' },
   { path: 'vet-registro', loadChildren: './pages/ingresar/vet-registro/vet-registro.module#VetRegistroPageModule' },
   { path: 'mascotas', loadChildren: './pages/ingresar/registrar/mascotas/mascotas.module#MascotasPageModule' },
+  { path: 'account', loadChildren: './pages/ingresar/account/account.module#AccountPageModule' },
+  { path: 'rastreo', loadChildren: './pages/home/rastreo/rastreo.module#RastreoPageModule', canActivate:[EntrarRastreoGuard] },
+  { path: 'usuarios', loadChildren: './pages/home/usuarios/usuarios.module#UsuariosPageModule' },
 ];
 
 @NgModule({

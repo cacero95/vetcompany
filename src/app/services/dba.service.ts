@@ -88,9 +88,23 @@ export class DbaService {
     while(this.key.indexOf(".") != -1){
       this.key = this.key.replace(".","_");
     }
-    console.log(usuario);
     
     this.fireDba.object(`${path}/${this.key}/`).update(usuario);
+  }
+  update_user(us:Users){
+    this.key = us.email;
+    this.key = this.key.replace("@","_");
+    while(this.key.indexOf(".")!=-1){
+      this.key = this.key.replace(".","_");
+    }
+    return new Promise((resolve,reject)=>{
+      this.fireDba.object(`usuarios/${this.key}`).update(us)
+      .then(()=>{
+        resolve(true);
+      }).catch(()=>{
+        reject(false);
+      })
+    });
   }
   registrar_pets(usuario:User_pets,is_imagen:boolean){
 
@@ -202,5 +216,20 @@ export class DbaService {
         return data; 
       })
     }))
+  }
+  /**
+   * Queria obtimizar este metodo con el publicar_info pero
+   * como tiene que guardar en dos partes diferentes el usuario
+   * so sad :(
+   */
+  update_veterinarias(vet:Veterinarias){
+    this.key = vet.email;
+    this.key = this.key.replace("@","_");
+    while(this.key.indexOf(".")!=-1){
+      this.key = this.key.replace(".","_");
+    }
+    this.fireDba.object(`veterinarias/${this.key}`).update(vet).then(()=>{
+      this.fireDba.object(`usuarios/${this.key}`).update(vet)
+    });
   }
 }

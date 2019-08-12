@@ -9,16 +9,18 @@ import { NavParams, ModalController } from '@ionic/angular';
   styleUrls: ['./chat.page.scss'],
 })
 export class ChatPage implements OnInit {
+  chat_grupo:Chats;
   url:string;
   chat:Chats;
   titulo:string;
   nombre_chat = '';
   type:string;
-  usuario:Users;
   user:Users;
+  mensaje:Mensaje;
+  usuario:Users;
   integrantes:Users[] = [];
   conversacion:Mensaje[] = [];
-  publicar_integrantes:Users[] = [];
+  publicar_integrantes:any[] = []; 
   constructor(private storage:Storage,
     private dba:DbaService,
     private params:NavParams,
@@ -27,181 +29,149 @@ export class ChatPage implements OnInit {
   ngOnInit() {
     this.chat = this.params.get('chat');
     this.user = this.params.get('user');
-    console.log(this.user);
-    this.asignar_usuario();
+    this.chat_grupo = this.params.get('grupo');
     if(this.chat){
-      
-      this.nombre_chat = this.chat.nombre;
-      this.integrantes = this.chat.users;
-      this.conversacion = this.chat.mensaje;
-      
-      this.load_integrantes();
-      if(this.integrantes.length == 2 ){
+      this.integrantes = this.params.get('usuarios_entrantes');
+      if(!this.chat_grupo){
         // quiere decir conversacion 1-1
-        for (let integrante of this.integrantes){
-          if (this.user.email != integrante.email){
-            this.titulo = integrante.name;
-            if(integrante.url){
-              this.url = integrante.url;
-              this.type = integrante.type;
-            }
-          }
-        }
+        this.asignar_datosChat(this.chat);
       }
       else {
-        this.titulo = this.chat.nombre;
+        this.asignar_datosChat(this.chat_grupo);
       }
+      this.crear_chat();
     }
     else {
       this.nombre_chat = this.params.get('nombre');
       this.integrantes = this.params.get('usuarios_entrantes');
       
-      if (this.integrantes.length == 2){
-        for (let integrante of this.integrantes){
-          
-          console.log(integrante);
-          if (integrante.email != this.user.email){
-            this.titulo = integrante.name;
-            this.type = integrante.type;
-            console.log(this.type);
-            if (integrante.url){
-              this.url = integrante.url;
-              
-            }
-          }
-        }
+      if (this.chat_grupo){
+        this.asignar_datosChat(this.chat_grupo);
       }
-      for (let x = 0; x < this.integrantes.length; x++){
-        if (!this.integrantes[x].chats){
-          // voy verificando que todos los integrantes del nuevo chat
-          // no tengan un chat undefined
-          this.integrantes[x].chats = [];
-          
-        }
-        
-        
+      else {
+        this.asignar_datosChat();
       }
       this.crear_chat();
     }
     
   }
-  asignar_usuario(){
-    if(this.user.apellido){
-      this.usuario = {
-        name:this.user.name,
-        apellido:this.user.apellido,
-        email:this.user.email,
-        type:this.user.type
-      } 
-    }
-    else {
-      this.usuario = {
-        name:this.user.name,
-        email:this.user.email,
-        type:this.user.type
-      }
-    } 
-    if(this.user.url){
-      this.usuario['url'] = this.user.url;
-      this.url = this.user.url;
-    }
-    else {
-      this.usuario['url'] = 'assets/img/chat_user.PNG';
+  asignar_datosChat(chat?:Chats){
+    // si se agrega el chat a la entrada significa que el chat es de un grupo
+    if(chat){     
+      this.nombre_chat = chat.nombre;
+      this.conversacion = chat.mensaje;
       this.url = 'assets/img/chat_user.PNG';
+      if (this.integrantes.length == 2){
+        let usuario = this.integrantes.find((us)=>{
+          return this.user.email !== us.email
+        });
+        if (usuario.url){
+          this.url = usuario.url;
+        }
+        this.titulo = usuario.name;
+        if (usuario.apellido){
+          this.titulo = `${usuario.name} ${usuario.apellido}`;
+        }
+      }
+      else {
+        this.titulo = chat.nombre;
+        if(chat.url){
+          this.url = chat.url;
+        }
+      }
     }
-  } 
+    // si entra al else quiere decir el chat es entre dos personas
+    else {
+      let find = this.integrantes.find((us)=>{
+        return us.email !== this.user.email
+      });
+      this.titulo = find.name;
+      if (find.apellido){
+        this.titulo = `${find.name} ${find.apellido}`;
+      }
+      this.url = 'assets/img/chat_user.PNG';
+      if (find.url) {
+        this.url = find.url;
+      }
+    }
+  }
   back(){
     this.modal.dismiss();
   }
-  async load_integrantes(){
-    let personas:Users[] = [];
-    personas.push(this.user);
-    for (let x = 1; x < this.integrantes.length; x++){
-      let llave = this.integrantes[x].email;
-      llave = llave.replace("@","_");
-      while(llave.indexOf(".")!=-1){
-        llave = llave.replace(".","_");
-      }
-      let persona:any = await this.dba.load_integrante(llave);
-      if (persona.email){
-        personas.push(persona);
-      }
-      
-    }
-    this.integrantes = personas;
-  }
+  
   crear_chat(){
-    
-    let final:any[] = [];
-    for (let add of this.integrantes){
-      let nuevo = new Object();
-      for(let adjuntico in add){
-        
-        if(adjuntico != "chats" && adjuntico != "veterinarias" && adjuntico != "users" && adjuntico != "calificaciones" && adjuntico != "tasks"){
-          nuevo[adjuntico] = add[adjuntico];
-        }
-        
+    // quitamos los datos innecesarios en cada uno de los integrantes del chat
+    for (let integrante of this.integrantes){
+      let nuevo_integrante = new Object();
+      if (!integrante.chats){
+        integrante.chats = [];
       }
-      final.push(nuevo);
+      for (let feature in integrante){
+        if (feature != "chats" && feature != "veterinarias" && feature != "users" && feature != "calificaciones" && feature != "tasks"){
+          nuevo_integrante[feature] = integrante[feature];
+        }
+      }
+      this.publicar_integrantes.push(nuevo_integrante)
     }
-    let nuevo_chat:Chats;
-    if (final.length == 2){
-      if (this.url){
-        nuevo_chat = {
-          nombre:this.nombre_chat,
-          users:final,
-          url:this.url,
-          type:this.type
-        }
+    let creador:Users = {
+      name:this.user.name,
+      email:this.user.email,
+      type:this.user.type
+    }
+    if (this.user.apellido){
+      creador.apellido = this.user.apellido;
+    }
+    if(this.chat_grupo){
+      this.mensaje = {
+        creador,
+        contenido:'',
+        url:'assets/img/chat_user.PNG'
       }
-      else {
-        nuevo_chat = {
-          nombre:this.nombre_chat,
-          users:final,
-          type:this.type
-        }
+      if (this.user.url){
+       this.mensaje.url = this.user.url; 
       }
     }
     else {
-      nuevo_chat = {
+      this.mensaje = {
+        creador,
+        contenido:'',
+        url:'assets/img/chat_user.PNG'
+      }
+      if (this.user.url){
+        this.mensaje.url = this.user.url;
+      }
+      this.chat = {
         nombre:this.nombre_chat,
-        users:final,
-        type:'Grupo'
+        type:'individual',
+        users:this.publicar_integrantes  
       }
     }
-    this.chat = nuevo_chat;
-    console.log('creando chat');
-    console.log(this.chat);
   }
   async publicar(mensaje){
-    let message:Mensaje;
-    console.log(this.url);
-    message = {
-      contenido:mensaje,
-      creador:this.usuario,
-      url:this.url
-    } 
     
-    console.log(message);
-    this.conversacion.unshift(message);
+    this.mensaje.contenido = mensaje;
     
     let send = document.getElementById('message');
-    send.innerHTML = "";
+    
+    
+    this.conversacion.unshift(this.mensaje);
     for (let integrante of this.integrantes){
+      
       let find = integrante.chats.findIndex((element)=>{
         return element.nombre === this.nombre_chat
       });
-      if (find > -1){
-        integrante.chats[find].mensaje = this.conversacion;
+      if (find > -1) {
+        integrante.chats[find].mensaje.push(this.mensaje);
       }
       else {
+        // se pregunta si el integrante no tiene chats
+        // con el fin de poder inicializar sus chats
         // esto quiere decir que es un chat nuevo
         this.chat["mensaje"] = this.conversacion;
         // agrego el nuevo chat al arreglo de chats de cada usuario
         integrante.chats.push(this.chat);
-
-        console.log(integrante);
       }
+      //usuarios/
       await this.dba.publicar_info(integrante,integrante.email,'usuarios');
     }
     

@@ -32,7 +32,7 @@
 </ion-content>
 <ion-footer>
     <ion-item>
-        <ion-textarea id="message" type="text" #mensaje slot="start" placeholder="que piensas" autocorrect="on" clearOnEdit="true" clearInput="true">
+        <ion-textarea clearOnEdit="true" autoGrow="true" mode="ios" id="message" type="text" #mensaje slot="start" placeholder="que piensas" autocorrect="on" clearOnEdit="true" clearInput="true">
 
         </ion-textarea>
         <ion-button (click)="publicar(mensaje.value)" slot="end" shape="round">

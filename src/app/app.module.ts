@@ -29,6 +29,10 @@ import { GruposComponent } from './components/grupos/grupos.component';
 import { ConsejoComponent } from './components/consejo/consejo.component';
 import { TypeUserComponent } from './components/type-user/type-user.component';
 import { ChatPage } from './pages/chat/chat.page';
+import { UpdateUserComponent } from './components/update-user/update-user.component';
+import { PopMascotaComponent } from './components/pop-mascota/pop-mascota.component';
+import { IonicRatingModule } from 'ionic4-rating';
+import { EventComponent } from './components/event/event.component';
 
 export const firebaseConfig = {
   apiKey: "AIzaSyBVY89FFlPr00IH6TuWsszn0CgpFn0ZkA0",
@@ -41,14 +45,17 @@ export const firebaseConfig = {
 registerLocaleData(localeCO,'es',localeCOExtra);
 
 @NgModule({
-  declarations: [AppComponent,GruposComponent,
-    ConsejoComponent,TypeUserComponent,ChatPage],
-  entryComponents: [GruposComponent,
-    ConsejoComponent,TypeUserComponent,ChatPage],
+  declarations: [AppComponent,GruposComponent,PopMascotaComponent,
+    ConsejoComponent,TypeUserComponent,ChatPage,UpdateUserComponent,
+    EventComponent
+  ],
+  entryComponents: [GruposComponent,UpdateUserComponent,PopMascotaComponent,
+    ConsejoComponent,TypeUserComponent,ChatPage,EventComponent],
   imports: [BrowserModule,
     AngularFireModule.initializeApp(firebaseConfig),
     AngularFireDatabaseModule,
     HttpClientModule,
+    IonicRatingModule,
     AngularFireAuthModule,
     IonicModule.forRoot(),
     IonicStorageModule.forRoot(),

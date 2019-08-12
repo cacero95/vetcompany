@@ -15,6 +15,7 @@ export class HomePage implements OnInit {
   usuarios:Users[] = [];
   is_chats:boolean;
   chats:boolean;
+  all_users:Users[] = [];
   constructor(private platform:Platform,
     private eventos:Events,
     private dba:DbaService,
@@ -27,16 +28,18 @@ export class HomePage implements OnInit {
         // cuando se crea el evento de inicio de sesion
         // la variable user recivira toda la Información
         this.user = user;
-        this.load_chats();
-        
+        this.load_chats();   
       });
     }
     if (!this.user){
       this.user = this.dba.getUsuario();
     }
+    
   }
   load_chats(){
+    
     this.dba.buscar_info('usuarios').subscribe((chats:any)=>{
+      this.all_users = chats;
       // si tiene chats busco el usuario para
       // eliminar el usuario de la lista de usuarios
       // disponibles      
@@ -45,7 +48,7 @@ export class HomePage implements OnInit {
         this.usuarios = chats.filter((us)=>{
           return us.email !== this.user.email
         });
-        console.log(this.usuarios);
+        
         /**
          * Comparo todos los usuarios que la persona 
          * que ingreso converso y los quito de los chats
@@ -60,6 +63,9 @@ export class HomePage implements OnInit {
         }
       }
       else {
+        chats = chats.filter((elements)=>{
+          return elements.email !== this.user.email
+        });
         this.usuarios = chats;
       }
     })
@@ -69,12 +75,19 @@ export class HomePage implements OnInit {
     this.router.navigate([`${url}`]);
   }
   async entrar_chat(chat:Chats){
-
+    let usuarios_entrantes:Users[] = [];
+    for (let conversacion of chat.users){
+      let find = this.all_users.find((us)=>{
+        return us.email === conversacion.email
+      });
+      usuarios_entrantes.push(find);
+    }
     let modal = await this.modal.create({
       component:ChatPage,
       componentProps:{
         chat,
-        user:this.user   
+        user:this.user,
+        usuarios_entrantes
       }
     });
     modal.present();
@@ -97,17 +110,12 @@ export class HomePage implements OnInit {
       if (this.user.chats){
         this.chats = true;
       }
-      
     })
   }
   change_option(valor){
     this.chats = valor;
   }
-  async entrar_grupo(grupo:any[],nombre:string){
-    let chats_entrantes = [];
-    chats_entrantes = grupo;
-    chats_entrantes.push(this.user); 
-  }
+  
   buscar_usuarios(event){
     console.log(event.target.value);
   }
